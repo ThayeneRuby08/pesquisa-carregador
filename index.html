@@ -1,1 +1,160 @@
-# pesquisa-carregador
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Mercado - Carregador Solar Portátil</title>
+    <style>
+        :root {
+            --verde: #2e7d32;
+            --roxo: #6a1b9a;
+            --fundo: #f4f6f4;
+            --branco: #ffffff;
+        }
+        body { font-family: Arial, sans-serif; background-color: var(--fundo); margin: 0; padding: 20px; }
+        .container { background: var(--branco); padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; border-top: 8px solid var(--verde); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1, h2 { color: var(--roxo); text-align: center; }
+        .question { margin-bottom: 18px; }
+        .question p { font-weight: bold; color: var(--verde); margin-bottom: 8px; }
+        .options label { display: block; margin-bottom: 6px; cursor: pointer; }
+        textarea { width: 100%; height: 70px; border-radius: 6px; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; resize: none; }
+        button { background-color: var(--verde); color: white; border: none; padding: 12px; font-size: 11pt; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: var(--roxo); }
+        .admin-link { text-align: center; margin-top: 20px; font-size: 9pt; color: var(--roxo); cursor: pointer; text-decoration: underline; }
+        .hidden { display: none; }
+        .bar { background: #eee; border-radius: 4px; height: 15px; margin-top: 4px; overflow: hidden; }
+        .fill { background: var(--verde); height: 100%; width: 0%; transition: width 0.4s; }
+    </style>
+</head>
+<body>
+
+    <div id="form-p" class="container">
+        <h1>Pesquisa: Carregador Solar Portátil</h1>
+        <p style="text-align: center; color: #666; font-size: 10pt;">Pesquisa anônima para feira de administração (Público: 15 a 25 anos)</p>
+        <form id="survey">
+            <div class="question">
+                <p>1. Você fica muito tempo fora de casa?</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="Pouco" required> Pouco</label>
+                    <label><input type="radio" name="q1" value="Frequentemente"> Frequentemente</label>
+                    <label><input type="radio" name="q1" value="Muito"> Muito</label>
+                </div>
+            </div>
+            <div class="question">
+                <p>2. Faz muito uso do celular?</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="Pouco" required> Pouco</label>
+                    <label><input type="radio" name="q2" value="Razoavelmente"> Razoavelmente</label>
+                    <label><input type="radio" name="q2" value="Muito"> Muito</label>
+                </div>
+            </div>
+            <div class="question">
+                <p>3. Costuma esquecer de carregar o celular?</p>
+                <div class="options">
+                    <label><input type="radio" name="q3" value="Não" required> Não</label>
+                    <label><input type="radio" name="q3" value="Às vezes"> Às vezes</label>
+                    <label><input type="radio" name="q3" value="Sempre"> Sempre</label>
+                </div>
+            </div>
+            <div class="question">
+                <p>4. Você compraria um carregador solar portátil?</p>
+                <div class="options">
+                    <label><input type="radio" name="q4" value="Sim" required> Sim</label>
+                    <label><input type="radio" name="q4" value="Não"> Não</label>
+                </div>
+            </div>
+            <div class="question">
+                <p>5. O que você acha da ideia de um carregador solar portátil?</p>
+                <textarea name="q5" required placeholder="Escreva sua opinião..."></textarea>
+            </div>
+            <div class="question">
+                <p>6. Como o carregador te ajudaria no dia a dia?</p>
+                <textarea name="q6" required placeholder="Escreva aqui..."></textarea>
+            </div>
+            <button type="submit">Enviar Resposta</button>
+        </form>
+        <div class="admin-link" onclick="openAdmin()">Acessar Painel do Grupo (Restrito)</div>
+    </div>
+
+    <div id="admin-p" class="container hidden" style="border-top-color:var(--roxo);">
+        <h1>Painel de Resultados</h1>
+        <button onclick="document.getElementById('admin-p').classList.add('hidden');document.getElementById('form-p').classList.remove('hidden');" style="background:var(--roxo); margin-bottom:15px;">Voltar para Pesquisa</button>
+        <div id="stats"><p style="text-align:center;">Carregando dados em tempo real...</p></div>
+    </div>
+
+    <script>
+        // ASSISTA O PASSO 2 ABAIXO PARA PEGAR ESSE LINK
+        const API_URL = "SUA_API_DO_SHEETDB_AQUI";
+
+        document.getElementById('survey').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const d = {
+                Timestamp: new Date().toLocaleString('pt-BR'),
+                Q1: new FormData(this).get('q1'), Q2: new FormData(this).get('q2'),
+                Q3: new FormData(this).get('q3'), Q4: new FormData(this).get('q4'),
+                Q5: new FormData(this).get('q5'), Q6: new FormData(this).get('q6')
+            };
+            
+            if(API_URL.includes("SUA_API")) {
+                // Modo teste local caso você abra antes de configurar a nuvem
+                let local = JSON.parse(localStorage.getItem('res')) || [];
+                local.push(d); localStorage.setItem('res', JSON.stringify(local));
+                alert('Resposta enviada (Modo Teste Local)!'); document.getElementById('survey').reset();
+                return;
+            }
+
+            fetch(API_URL, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ data: [d] })
+            }).then(() => { alert('Resposta salva na nuvem com sucesso!'); document.getElementById('survey').reset(); })
+              .catch(() => alert('Erro ao conectar com a nuvem.'));
+        });
+
+        function openAdmin() {
+            if(prompt("Digite a senha do grupo:") !== "1234") return alert("Senha incorreta!");
+            document.getElementById('form-p').className='container hidden';
+            document.getElementById('admin-p').className='container';
+            
+            if(API_URL.includes("SUA_API")) {
+                showData(JSON.parse(localStorage.getItem('res')) || []);
+            } else {
+                fetch(API_URL).then(res => res.json()).then(data => showData(data));
+            }
+        }
+
+        function showData(arr) {
+            let t = arr.length;
+            if(t===0) { document.getElementById('stats').innerHTML = "<p>Nenhuma resposta ainda.</p>"; return; }
+            let counts = {q1:{Pouco:0,Frequentemente:0,Muito:0}, q2:{Pouco:0,Razoavelmente:0,Muito:0}, q3:{Não:0,"Às vezes":0,Sempre:0}, q4:{Sim:0,Não:0}};
+            let txt = "<h2>Porcentagens Quantitativas</h2>";
+            
+            arr.forEach(r => {
+                if(counts.q1[r.Q1]!==undefined) counts.q1[r.Q1]++;
+                if(counts.q2[r.Q2]!==undefined) counts.q2[r.Q2]++;
+                if(counts.q3[r.Q3]!==undefined) counts.q3[r.Q3]++;
+                if(counts.q4[r.Q4]!==undefined) counts.q4[r.Q4]++;
+            });
+
+            const b = (title, obj) => {
+                let h = `<h3>${title}</h3>`;
+                for(let k in obj) {
+                    let p = Math.round((obj[k]/t)*100);
+                    h += `<small>${k}: ${obj[k]} respostas (${p}%)</small><div class="bar"><div class="fill" style="width:${p}%"></div></div>`;
+                }
+                return h;
+            };
+
+            txt += b("1. Fica muito tempo fora de casa?", counts.q1);
+            txt += b("2. Faz muito uso do celular?", counts.q2);
+            txt += b("3. Costuma esquecer de carregar?", counts.q3);
+            txt += b("4. Compraria o carregador solar?", counts.q4);
+            
+            txt += "<h2>Opiniões Qualitativas</h2>";
+            arr.forEach((r, i) => {
+                txt += `<div style="border-bottom:1px solid #eee; padding:10px 0;"><small><b>Resposta #${i+1} (${r.Timestamp || 'Sem data'}):</b></small><br>• <b>O que acha da ideia:</b> ${r.Q5}<br>• <b>Como ajudaria:</b> ${r.Q6}</div>`;
+            });
+            document.getElementById('stats').innerHTML = txt;
+        }
+    </script>
+</body>
+</html>
