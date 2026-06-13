@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Mercado - Carregador Solar Portátil</title>
+    <style>
+        :root {
+            --verde: #2e7d32;
+            --roxo: #6a1b9a;
+            --fundo: #f4f6f4;
+            --branco: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--fundo);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: var(--branco);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            border-top: 8px solid var(--verde);
+            margin-bottom: 20px;
+        }
+        h1, h2 { color: var(--roxo); text-align: center; }
+        .question { margin-bottom: 20px; }
+        .question p { font-weight: bold; margin-bottom: 10px; color: var(--verde); }
+        .options label { display: block; margin-bottom: 8px; cursor: pointer; }
+        textarea { width: 100%; height: 80px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; resize: none; box-sizing: border-box; }
+        button {
+            background-color: var(--verde);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover { background-color: var(--roxo); }
+        .nav-admin { background: none; color: var(--roxo); border: none; cursor: pointer; text-decoration: underline; margin-top: 10px; }
+        .hidden { display: none; }
+        .chart-bar { background: #eee; border-radius: 5px; height: 20px; margin-top: 5px; overflow: hidden; }
+        .chart-fill { background: var(--verde); height: 100%; width: 0%; transition: width 0.5s; }
+        .response-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="form-page" class="container">
+        <h1>Pesquisa: Energia Sustentável no seu Dia a Dia</h1>
+        <p style="text-align: center; color: #666;">Sua opinião é anônima e muito importante para o nosso projeto escolar!</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        
+        <form id="market-form">
+            <div class="question">
+                <p>1. Quanto tempo do seu dia você costuma passar fora de casa (trabalho, escola, rolê)?</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="Pouco" required> Pouco tempo (maior parte em casa)</label>
+                    <label><input type="radio" name="q1" value="Frequentemente"> Frequentemente (períodos longos fora)</label>
+                    <label><input type="radio" name="q1" value="Muito"> Muito tempo (passo o dia todo na rua)</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>2. Como você avalia a frequência de uso do seu smartphone diariamente?</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="Pouco" required> Pouco (apenas o essencial)</label>
+                    <label><input type="radio" name="q2" value="Razoavelmente"> Razoavelmente (redes sociais e mensagens moderadas)</label>
+                    <label><input type="radio" name="q2" value="Muito"> Muito alto (trabalho, jogos, vídeos e uso constante)</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>3. Você costuma passar pelo sufoco de esquecer de carregar o celular antes de sair?</p>
+                <div class="options">
+                    <label><input type="radio" name="q3" value="Não" required> Não, estou sempre com 100%</label>
+                    <label><input type="radio" name="q3" value="Às vezes"> Às vezes me esqueço ou a bateria não dura</label>
+                    <label><input type="radio" name="q3" value="Sempre"> Sempre fico sem bateria na rua</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>4. Você compraria um carregador solar portátil (sustentável e que recarrega com a luz do sol)?</p>
+                <div class="options">
+                    <label><input type="radio" name="q4" value="Sim" required> Sim, com certeza!</label>
+                    <label><input type="radio" name="q4" value="Não"> Não teria interesse.</label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>5. O que você acha da ideia de um carregador que funciona com energia solar?</p>
+                <textarea name="q5" placeholder="Sua opinião sincera..." required></textarea>
+            </div>
+
+            <div class="question">
+                <p>6. De que forma esse carregador solar ajudaria na sua rotina diária?</p>
+                <textarea name="q6" placeholder="Ex: me salvaria nos dias de blocos, na escola, etc..." required></textarea>
+            </div>
+
+            <button type="submit">Enviar Resposta</button>
+        </form>
+        <button class="nav-admin" onclick="showAdmin()">Acessar Painel do Grupo (Admin)</button>
+    </div>
+
+    <div id="admin-page" class="container hidden" style="border-top: 8px solid var(--roxo);">
+        <h1>Painel de Resultados do Grupo</h1>
+        <button onclick="showForm()" style="background-color: var(--roxo); margin-bottom: 20px;">Voltar para o Formulário</button>
+        
+        <h2>Estatísticas (Quantitativas)</h2>
+        <div id="analytics"></div>
+
+        <h2>Respostas Escritas (Qualitativas)</h2>
+        <div id="text-responses"></div>
+    </div>
+
+    <script>
+        // Função para salvar as respostas (Simula banco de dados no navegador)
+        document.getElementById('market-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const resposta = {
+                data: new Date().toLocaleString('pt-BR'),
+                q1: formData.get('q1'),
+                q2: formData.get('q2'),
+                q3: formData.get('q3'),
+                q4: formData.get('q4'),
+                q5: formData.get('q5'),
+                q6: formData.get('q6')
+            };
+
+            let respostasSalvas = JSON.parse(localStorage.getItem('respostasCarregador')) || [];
+            respostasSalvas.push(resposta);
+            localStorage.setItem('respostasCarregador', JSON.stringify(respostasSalvas));
+
+            alert('Resposta enviada com sucesso! Obrigado.');
+            this.reset();
+        });
+
+        function showAdmin() {
+            const senha = prompt("Digite a senha do grupo para ver os resultados:");
+            if (senha === "admin123") { // Altere a senha do seu grupo aqui
+                document.getElementById('form-page').classList.add('hidden');
+                document.getElementById('admin-page').classList.remove('hidden');
+                renderResults();
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+
+        function showForm() {
+            document.getElementById('admin-page').classList.add('hidden');
+            document.getElementById('form-page').classList.remove('hidden');
+        }
+
+        function calculatePercentage(votos, total) {
+            return total === 0 ? 0 : Math.round((votos / total) * 100);
+        }
+
+        function renderResults() {
+            const respostas = JSON.parse(localStorage.getItem('respostasCarregador')) || [];
+            const total = respostas.length;
+            
+            // Contadores
+            let q1Count = { Pouco: 0, Frequentemente: 0, Muito: 0 };
+            let q2Count = { Pouco: 0, Razoavelmente: 0, Muito: 0 };
+            let q3Count = { Não: 0, "Às vezes": 0, Sempre: 0 };
+            let q4Count = { Sim: 0, Não: 0 };
+
+            let qualisHtml = "";
+
+            respostas.forEach(r => {
+                if(q1Count[r.q1] !== undefined) q1Count[r.q1]++;
+                if(q2Count[r.q2] !== undefined) q2Count[r.q2]++;
+                if(q3Count[r.q3] !== undefined) q3Count[r.q3]++;
+                if(q4Count[r.q4] !== undefined) q4Count[r.q4]++;
+
+                qualisHtml += `
+                    <div class="response-item">
+                        <small><b>Respondido em:</b> ${r.data}</small><br>
+                        <strong>O que acha da ideia:</strong> ${r.q5}<br>
+                        <strong>Como ajudaria:</strong> ${r.q6}
+                    </div>
+                `;
+            });
+
+            // Renderizar gráficos simples
+            let analyticsHtml = `<p><b>Total de respostas coletadas:</b> ${total}</p>`;
+            
+            const renderBlock = (titulo, dados) => {
+                let html = `<h3>${titulo}</h3>`;
+                for (let chave in dados) {
+                    let pct = calculatePercentage(dados[chave], total);
+                    html += `
+                        <label>${chave}: ${dados[chave]} votos (${pct}%)</label>
+                        <div class="chart-bar"><div class="chart-fill" style="width: ${pct}%"></div></div>
+                    `;
+                }
+                return html;
+            };
+
+            analyticsHtml += renderBlock("1. Tempo fora de casa", q1Count);
+            analyticsHtml += renderBlock("2. Uso do celular", q2Count);
+            analyticsHtml += renderBlock("3. Esquece de carregar", q3Count);
+            analyticsHtml += renderBlock("4. Compraria o carregador", q4Count);
+
+            document.getElementById('analytics').innerHTML = analyticsHtml;
+            document.getElementById('text-responses').innerHTML = qualisHtml || "<p>Nenhuma resposta qualitativa ainda.</p>";
+        }
+    </script>
+</body>
+</html>
